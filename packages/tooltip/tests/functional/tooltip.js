@@ -228,6 +228,26 @@ describe('[tooltip.js]', () => {
       });
     });
 
+    it('should use a document fragment as tooltip content', done => {
+      const content = document.createDocumentFragment();
+      const inner = document.createElement('div');
+      inner.innerText = 'test';
+      content.appendChild(inner);
+      instance = new Tooltip(reference, {
+        title: content,
+        html: true,
+      });
+
+      instance.show();
+
+      then(() => {
+        expect(
+          document.querySelector('.tooltip .tooltip-inner').innerHTML
+        ).toBe('<div>test</div>');
+        done();
+      });
+    });
+
     it('should use a function result as tooltip content', done => {
       instance = new Tooltip(reference, {
         title: () => 'foobar',
@@ -376,6 +396,24 @@ describe('[tooltip.js]', () => {
       });
     });
 
+    it('should not show tooltip if mouse leaves reference before tooltip is shown', done => {
+      instance = new Tooltip(reference, {
+        title: 'foobar',
+        trigger: 'hover',
+        delay: { show: 1000, hide: 0 },
+      });
+
+      expect(document.querySelector('.tooltip')).toBeNull();
+
+      reference.dispatchEvent(new CustomEvent('mouseenter'));
+      reference.dispatchEvent(new CustomEvent('mouseleave'));
+
+      then(() => {
+        expect(document.querySelector('.tooltip')).toBeNull();
+        done();
+      });
+    });
+
     it('should hide a tooltip on click while open', done => {
       instance = new Tooltip(reference, {
         title: 'foobar',
@@ -390,6 +428,21 @@ describe('[tooltip.js]', () => {
         expect(document.querySelector('.tooltip').style.display).toBe('none');
         done();
       });
+    });
+  });
+
+  describe('options', () => {
+    beforeEach(() => {
+      createReference();
+    });
+
+    it('should proxy the `options.offset` value to the Popper.js instance', done => {
+      instance = new Tooltip(reference, {
+        title: 'test',
+        offset: 10,
+      }).show();
+      expect(instance._popperOptions.modifiers.offset.offset).toBe(10);
+      done();
     });
   });
 });
